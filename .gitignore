@@ -1,0 +1,19 @@
+# クライアント固有データ（PC固有・Gitで管理しない）
+clients/
+
+# ブラウザセッション（ログイン情報）
+chrome-profiles/
+
+# Python仮想環境
+flux-env/
+
+# アクティブクライアント記録（ローカル状態）
+current_client
+
+# Pythonキャッシュ
+__pycache__/
+*.pyc
+*.pyo
+
+# ログ・出力
+*.log
