@@ -12,49 +12,37 @@
 
 ---
 
-## 1. ファイルをコピーする（元PC側の作業）
-
-ターミナルを開いて以下を実行します。
-
-```bash
-# デスクトップにコピー用フォルダを作る
-mkdir -p ~/Desktop/sns_transfer
-
-# コピーする（flux-envはバイナリ入りvenvなので除外・別PCで再作成される）
-rsync -a --exclude='sns/flux-env' ~/.claude/sns     ~/Desktop/sns_transfer/
-cp -r ~/.claude/scripts ~/Desktop/sns_transfer/
-```
-
-デスクトップに `sns_transfer` フォルダが作られます。
-これをUSBメモリ・AirDrop・外付けHDD等で別PCに渡してください。
-
----
-
-## 2. ファイルを配置する（別PC側の作業）
+## 1. ファイルを取得する（別PC側の作業）
 
 別PCのターミナルを開きます。
 （Finder → アプリケーション → ユーティリティ → ターミナル）
 
-まず配置先フォルダを作ります。
+GitHubからクローンします。
 
 ```bash
 mkdir -p ~/.claude
-```
-
-次に、受け取った `sns_transfer` フォルダの中身を配置します。
-（以下はデスクトップに `sns_transfer` が置いてある場合）
-
-```bash
-cp -r ~/Desktop/sns_transfer/sns     ~/.claude/
-cp -r ~/Desktop/sns_transfer/scripts ~/.claude/
+git clone https://github.com/goriazarashi-ui/sns-engine.git ~/.claude/sns
 ```
 
 確認します。
 
 ```bash
-ls ~/.claude/
-# sns と scripts が表示されればOK
+ls ~/.claude/sns
+# scripts/ skills/ setup.sh などが表示されればOK
 ```
+
+---
+
+## 1b. すでにインストール済みのPCにパッチを当てる場合
+
+開発機で修正が入ったとき、クライアントPCで以下を実行するだけです。
+
+```bash
+cd ~/.claude/sns
+git pull
+```
+
+`clients/`（クライアント設定）は gitignore されているため、上書きされません。
 
 ---
 
