@@ -2,8 +2,8 @@
 # アセット画像自動拡充スクリプト（LaunchAgent用）
 # 毎晩2:00に実行される
 
-FLUX_PYTHON="$HOME/.claude/sns/flux-env/bin/python3"
-SNS="$HOME/.claude/sns"
+SNS="$(cd "$(dirname "$0")/.." && pwd)"
+FLUX_PYTHON="$SNS/flux-env/bin/python3"
 LOG="$HOME/.claude/outputs/launchagent_grow_assets.log"
 
 # アクティブクライアントを読み込む

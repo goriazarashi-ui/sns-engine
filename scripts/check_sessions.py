@@ -21,7 +21,8 @@ except ImportError:
     print("ERROR: pip3 install playwright --break-system-packages")
     sys.exit(1)
 
-PROFILES_DIR = Path.home() / ".claude/sns/chrome-profiles"
+_SNS_ROOT = Path(__file__).resolve().parent.parent
+PROFILES_DIR = _SNS_ROOT / "chrome-profiles"
 
 # チェック対象: (プロファイル名サフィックス, チェックURL, ログイン判定条件)
 SNS_CHECKS = [

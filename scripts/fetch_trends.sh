@@ -3,7 +3,7 @@
 # 毎晩1:00に実行される
 
 PYTHON=/opt/homebrew/bin/python3
-SNS="$HOME/.claude/sns"
+SNS="$(cd "$(dirname "$0")/.." && pwd)"
 LOG="$HOME/.claude/outputs/launchagent_fetch_trends.log"
 
 exec >> "$LOG" 2>&1

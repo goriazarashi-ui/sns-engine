@@ -9,7 +9,9 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-CLIENTS_DIR = Path.home() / ".claude" / "sns" / "clients"
+# スクリプト自身の場所からリポジトリルートを算出（インストールパス非依存）
+_SNS_ROOT = Path(__file__).resolve().parent.parent
+CLIENTS_DIR = _SNS_ROOT / "clients"
 
 
 def list_clients() -> list[str]:

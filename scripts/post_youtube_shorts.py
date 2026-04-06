@@ -33,11 +33,12 @@ except ImportError:
     print("ERROR: pip3 install playwright --break-system-packages")
     sys.exit(1)
 
+_SNS_ROOT = Path(__file__).resolve().parent.parent
 SCREENSHOT_DIR = Path.home() / ".claude/outputs/images"
 VIDEO_DIR = Path.home() / ".claude/outputs/videos"
-AUTOMATION_PROFILES_DIR = Path.home() / ".claude/sns/chrome-profiles"
+AUTOMATION_PROFILES_DIR = _SNS_ROOT / "chrome-profiles"
 GENERATE_VIDEO_SCRIPT = Path.home() / ".claude/scripts/generate_video.py"
-SKILLS_DIR = Path.home() / ".claude/sns/skills"
+SKILLS_DIR = _SNS_ROOT / "skills"
 
 
 def automation_profile(client_name: str) -> Path:

@@ -3,7 +3,7 @@
 # 17:58に実行される
 
 PYTHON=/opt/homebrew/bin/python3
-SNS="$HOME/.claude/sns"
+SNS="$(cd "$(dirname "$0")/.." && pwd)"
 LOG="$HOME/.claude/outputs"
 
 # アクティブクライアントを読み込む（setup.sh が生成）
