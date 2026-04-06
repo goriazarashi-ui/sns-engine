@@ -33,29 +33,160 @@ ls ~/.claude/sns
 
 ---
 
-## 1b. すでにインストール済みのPCにパッチを当てる場合
+## 1b. すでにインストール済みのPCを最新に更新する（パッチを当てる）
 
-開発機で修正が入ったとき、クライアントPCで以下を実行するだけです。
+開発機（いつも作業しているPC）でスクリプトを修正したあと、
+クライアントPC（自動投稿が動いているPC）を最新の状態にする手順です。
 
-```bash
-cd ~/.claude/sns && git pull && bash update.sh
+---
+
+### 手順の全体像
+
+やることは **3ステップ** だけです。
+
+```
+① ターミナルを開く
+② SNSフォルダに移動する
+③ コマンドを2つ実行する
 ```
 
-初回は `git pull` で `update.sh` 自体を取得する必要があるため、この順番で実行してください。
-2回目以降は `bash ~/.claude/sns/update.sh` だけでもOKです（スクリプト内で `git pull` を実行します）。
+所要時間: 約3〜5分（ネット速度による）
 
-`update.sh` が自動実行する内容:
+---
 
-1. `git pull` で最新コードを取得
-2. Python パッケージ・Playwright Chrome を更新
-3. Flux venv があれば更新
-4. LaunchAgent を再生成・再登録（既存の GIST_TOKEN は保持）
-5. 動作確認（LaunchAgent件数・クライアント設定・Chromeプロファイル）
+### ステップ①　ターミナルを開く
 
-`clients/`（クライアント設定）は gitignore されているため、上書きされません。
+クライアントPCで「ターミナル」を開きます。
 
-> **注意**: ローカルでスクリプトを直接編集している場合、`git pull` が失敗します。
-> その場合は先に `git stash` でローカル変更を退避してください。
+- Finder → アプリケーション → ユーティリティ → **ターミナル**
+- または、Spotlight（`Cmd + Space`）で「ターミナル」と入力して Enter
+
+黒い（または白い）画面が出たらOKです。
+
+---
+
+### ステップ②　SNSフォルダに移動する
+
+ターミナルに以下を入力して Enter を押します。
+
+**SNSが `~/.claude/sns` にある場合（ほとんどの場合はこれ）:**
+
+```bash
+cd ~/.claude/sns
+```
+
+**別の場所にインストールした場合:**
+
+```bash
+cd /インストールした場所のパス
+```
+
+> **わからない場合の探し方:**
+> ```bash
+> find ~ -name "sns_morning.sh" -type f 2>/dev/null
+> ```
+> 表示されたパスの `scripts/sns_morning.sh` を除いた部分がSNSフォルダです。
+> 例: `/Users/ryuji/sns-engine/scripts/sns_morning.sh` → `cd /Users/ryuji/sns-engine`
+
+Enter を押したあと、エラーが出なければ移動完了です。
+
+---
+
+### ステップ③　コマンドを実行する
+
+**以下を1行ずつ、入力して Enter を押してください。**
+
+**1行目: 最新のコードをダウンロード**
+
+```bash
+git pull
+```
+
+こんな感じの表示が出たら成功です:
+
+```
+remote: Enumerating objects: ...
+Updating xxxxxxx..yyyyyyy
+Fast-forward
+ scripts/sns_morning.sh | 7 ++++---
+ ...
+```
+
+> `Already up to date.` と出たら、すでに最新です。ステップ③の2行目に進んでください。
+
+> **エラーが出た場合:**
+>
+> `error: Your local changes ...` と出たら、以下を実行してからもう一度 `git pull` してください:
+> ```bash
+> git stash
+> git pull
+> ```
+
+**2行目: 更新スクリプトを実行**
+
+```bash
+bash update.sh
+```
+
+自動で以下が実行されます（画面にチェックマークが出ていきます）:
+
+```
+✅ クライアント: 天弥堂
+✅ コード更新完了
+✅ Python パッケージ更新完了
+✅ Playwright Chrome 更新完了
+✅ LaunchAgent 再登録完了
+✅ LaunchAgent: 5 件稼働中
+✅ クライアント設定: 4 / 4 件OK
+```
+
+最後に「アップデート完了！」と出たら成功です。
+
+---
+
+### ステップ④（確認）　ちゃんと動いているか見る
+
+念のため確認したい場合は、以下を入力してください:
+
+```bash
+launchctl list | grep sns
+```
+
+こんな感じで **5行** 出ればOKです:
+
+```
+-   0   com.imamuramaki.sns.morning
+-   0   com.imamuramaki.sns.evening
+-   0   com.imamuramaki.sns.fetch_trends
+-   0   com.imamuramaki.sns.grow_assets
+-   0   com.imamuramaki.sns.check_sessions
+```
+
+---
+
+### うまくいかないときは
+
+| 症状 | 対処法 |
+|------|--------|
+| `cd` でエラー | SNSフォルダのパスが違います。上の「探し方」を試してください |
+| `git pull` で認証エラー | GitHub にログインが必要です。`git config credential.helper osxkeychain` を実行してから再度 `git pull` |
+| `git pull` でローカル変更エラー | `git stash` → `git pull` の順で実行 |
+| `bash update.sh` で Python エラー | `python3 --version` を実行。表示されなければ `brew install python` |
+| LaunchAgent が 5件未満 | `bash update.sh` をもう一度実行 |
+
+---
+
+### 2回目以降の更新
+
+2回目以降は、もっと簡単です。ターミナルを開いて以下の1行だけ:
+
+```bash
+bash ~/.claude/sns/update.sh
+```
+
+（`update.sh` の中で自動的に `git pull` も実行します）
+
+> 別の場所にインストールしている場合は `bash /インストール先のパス/update.sh`
 
 ---
 
