@@ -38,11 +38,21 @@ ls ~/.claude/sns
 開発機で修正が入ったとき、クライアントPCで以下を実行するだけです。
 
 ```bash
-cd ~/.claude/sns
-git pull
+bash ~/.claude/sns/update.sh
 ```
 
+これ1つで以下がすべて自動実行されます:
+
+1. `git pull` で最新コードを取得
+2. Python パッケージ・Playwright Chrome を更新
+3. Flux venv があれば更新
+4. LaunchAgent を再生成・再登録（既存の GIST_TOKEN は保持）
+5. 動作確認（LaunchAgent件数・クライアント設定・Chromeプロファイル）
+
 `clients/`（クライアント設定）は gitignore されているため、上書きされません。
+
+> **注意**: ローカルでスクリプトを直接編集している場合、`git pull` が失敗します。
+> その場合は先に `git stash` でローカル変更を退避してください。
 
 ---
 

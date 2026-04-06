@@ -206,18 +206,17 @@ def post_to_youtube_shorts(client_name: str, video_path: Path, title: str, descr
                         desc_field.click()
                         desc_field.type(description, delay=20)
                         time.sleep(1)
+                        # ハッシュタグのオートコンプリートドロップダウンを閉じる
+                        page.keyboard.press("Escape")
+                        time.sleep(0.5)
+                        # タイトル欄をクリックしてフォーカスを移しドロップダウンを確実に消す
+                        title_field.click()
+                        time.sleep(0.5)
                 except Exception:
                     pass
 
-            # 「子ども向けでない」を選択（必須：未選択だと次へが無効）
-            try:
-                not_for_kids = page.locator('#offRadio').first
-                not_for_kids.wait_for(timeout=10000)
-                not_for_kids.click()
-                time.sleep(1)
-                print("  → 視聴者層: 子ども向けでない")
-            except Exception:
-                pass
+            # 視聴者層はチャンネルデフォルト（子ども向けでない）に任せる — 触らない
+            print("  → 視聴者層: チャンネルデフォルト使用（子ども向けでない）")
 
             # 「次へ」を3回クリック（詳細 → 動画の要素 → チェック → 公開設定）
             for step in ["動画の要素", "チェック", "公開設定"]:

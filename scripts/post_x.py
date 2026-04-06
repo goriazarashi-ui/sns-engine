@@ -142,15 +142,79 @@ def post_to_x(client_name: str, text: str, image_path: str = None, video_path: s
             if attach_path:
                 file_input = page.locator('input[data-testid="fileInput"]')
                 file_input.set_input_files(attach_path)
-                time.sleep(5)  # 動画は画像より処理に時間がかかる
+                is_video = str(attach_path).lower().endswith('.mp4')
+                if is_video:
+                    print("  ⏳ 動画アップロード処理待機中...")
+                    # アップロード中のプログレスバーが消えるまで待つ（最大60秒）
+                    for _ in range(60):
+                        time.sleep(1)
+                        # progressbar が消えたら完了
+                        progress = page.locator('[data-testid="attachments"] [role="progressbar"]')
+                        if progress.count() == 0:
+                            break
+                    time.sleep(2)
+                else:
+                    time.sleep(3)
 
-            # 投稿ボタン（オーバーレイがあるためJS経由でクリック）
+            # 投稿ボタン — ネイティブクリックを試み、失敗したらJS経由
             tweet_btn = page.locator('[data-testid="tweetButtonInline"]')
             tweet_btn.wait_for(timeout=10000)
-            tweet_btn.evaluate("el => el.click()")
-            time.sleep(3)
+            try:
+                tweet_btn.click(timeout=5000)
+            except Exception:
+                tweet_btn.evaluate("el => el.click()")
 
-            print("✅ 投稿完了!")
+            # 投稿後20秒間、ダイアログ監視 & 成否確認
+            posted = False
+            for _ in range(20):
+                time.sleep(1)
+
+                # 成功①：投稿完了トーストが出た
+                try:
+                    toast = page.locator('[data-testid="toast"]')
+                    if toast.count() > 0 and toast.first.is_visible(timeout=200):
+                        posted = True
+                        break
+                except Exception:
+                    pass
+
+                # 成功②：投稿ボタンが非表示になった（モーダルが閉じた）
+                try:
+                    btn_inline = page.locator('[data-testid="tweetButtonInline"]').first
+                    if not btn_inline.is_visible(timeout=200):
+                        posted = True
+                        break
+                except Exception:
+                    pass
+
+                # ダイアログが出ていたら承認（app-bar-closeはキャンセルなので除外）
+                for confirm_sel in [
+                    '[data-testid="confirmationSheetConfirm"]',
+                    'button:has-text("投稿する")',
+                    'button:has-text("Post")',
+                    'button:has-text("はい")',
+                    'button:has-text("OK")',
+                    'button:has-text("続ける")',
+                    'button:has-text("Continue")',
+                ]:
+                    try:
+                        btn = page.locator(confirm_sel).first
+                        if btn.is_visible(timeout=200):
+                            _save_screenshot(page, f"{client_name}_dialog")
+                            btn.click()
+                            print(f"  → ダイアログを承認 ({confirm_sel})")
+                            time.sleep(1)
+                            break
+                    except Exception:
+                        continue
+
+            _save_screenshot(page, f"{client_name}_after_post")
+
+            if posted:
+                print("✅ 投稿完了!")
+            else:
+                print("❌ 投稿が確認できませんでした（スクリーンショットを確認してください）")
+                raise Exception("投稿未確認")
 
         except PlaywrightTimeout as e:
             print(f"❌ タイムアウト: {e}")

@@ -44,14 +44,38 @@ def load_content_profile(client_name: str) -> dict:
 
 
 def get_asset_images(client_name: str, activity: str, config: dict) -> list[str]:
-    """アクティビティに対応するアセット画像パスリストを返す（絶対パス）"""
+    """アクティビティに対応するアセット画像パスリストを返す（絶対パス）。
+    設定リストが空の場合はフォルダを直接スキャンし、
+    それでも空なら他のアクティビティ画像からランダムにフォールバック。
+    """
     client_dir = get_client_dir(client_name)
+    EXTS = {".jpg", ".jpeg", ".png", ".webp"}
+
+    # 1. sns_config.json のリストから検索
     images = config.get("assets", {}).get("images", {}).get(activity, [])
-    abs_paths = []
-    for rel in images:
-        abs_path = client_dir / rel
-        if abs_path.exists():
-            abs_paths.append(str(abs_path))
+    abs_paths = [str(client_dir / r) for r in images if (client_dir / r).exists()]
+
+    # 2. リストが空 → activityと同名フォルダをスキャン
+    if not abs_paths:
+        base = client_dir / "assets" / "images"
+        for folder_name in [activity, activity.replace("・", "_")]:
+            folder = base / folder_name
+            if folder.is_dir():
+                abs_paths = [str(p) for p in sorted(folder.iterdir()) if p.suffix.lower() in EXTS]
+                if abs_paths:
+                    break
+
+    # 3. まだ空 → 他の全アクティビティ画像からランダムに10枚
+    if not abs_paths:
+        all_images = config.get("assets", {}).get("images", {})
+        pool = []
+        for act, paths in all_images.items():
+            if act == activity:
+                continue
+            pool += [str(client_dir / r) for r in paths if (client_dir / r).exists()]
+        if pool:
+            abs_paths = random.sample(pool, min(10, len(pool)))
+
     return abs_paths
 
 
