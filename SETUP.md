@@ -38,10 +38,13 @@ ls ~/.claude/sns
 開発機で修正が入ったとき、クライアントPCで以下を実行するだけです。
 
 ```bash
-bash ~/.claude/sns/update.sh
+cd ~/.claude/sns && git pull && bash update.sh
 ```
 
-これ1つで以下がすべて自動実行されます:
+初回は `git pull` で `update.sh` 自体を取得する必要があるため、この順番で実行してください。
+2回目以降は `bash ~/.claude/sns/update.sh` だけでもOKです（スクリプト内で `git pull` を実行します）。
+
+`update.sh` が自動実行する内容:
 
 1. `git pull` で最新コードを取得
 2. Python パッケージ・Playwright Chrome を更新
