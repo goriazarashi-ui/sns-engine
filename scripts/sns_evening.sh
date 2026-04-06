@@ -2,9 +2,10 @@
 # SNS夕方投稿スクリプト（LaunchAgent用）
 # 17:58に実行される
 
-PYTHON=/opt/homebrew/bin/python3
 SNS="$(cd "$(dirname "$0")/.." && pwd)"
-LOG="$HOME/.claude/outputs"
+PYTHON="$(command -v python3)"
+LOG="$SNS/outputs"
+mkdir -p "$LOG"
 
 # アクティブクライアントを読み込む（setup.sh が生成）
 # plistの環境変数 SNS_CLIENT が優先、なければ current_client、なければ天弥堂
@@ -50,7 +51,7 @@ $REPORT_CMD >> "$LOG/cron_report.log" 2>&1
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] TikTok 完了"
 
 # TikTokが生成した動画をXで使い回す
-SHARED_VIDEO=$(ls -t "$HOME/.claude/outputs/videos/$(date '+%Y-%m-%d')"/*_tiktok.mp4 2>/dev/null | head -1)
+SHARED_VIDEO=$(ls -t "$SNS/outputs/videos/$(date '+%Y-%m-%d')"/*_tiktok.mp4 2>/dev/null | head -1)
 
 # 6. X（TikTokと同じ動画を使用）
 if [ -n "$SHARED_VIDEO" ]; then

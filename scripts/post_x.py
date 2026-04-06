@@ -30,7 +30,7 @@ except ImportError:
     sys.exit(1)
 
 _SNS_ROOT = Path(__file__).resolve().parent.parent
-SCREENSHOT_DIR = Path.home() / ".claude/outputs/images"
+SCREENSHOT_DIR = _SNS_ROOT / "outputs/images"
 AUTOMATION_PROFILES_DIR = _SNS_ROOT / "chrome-profiles"
 SKILLS_DIR = _SNS_ROOT / "skills"
 

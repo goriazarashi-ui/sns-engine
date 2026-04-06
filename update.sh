@@ -8,7 +8,8 @@ set -e
 SNS_DIR="$(cd "$(dirname "$0")" && pwd)"
 HOME_DIR="$HOME"
 LAUNCH_AGENTS="$HOME_DIR/Library/LaunchAgents"
-LOG_DIR="$HOME_DIR/.claude/outputs"
+LOG_DIR="$SNS_DIR/outputs"
+mkdir -p "$LOG_DIR"
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'

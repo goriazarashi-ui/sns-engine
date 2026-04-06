@@ -32,7 +32,7 @@ except ImportError:
     sys.exit(1)
 
 _SNS_ROOT = Path(__file__).resolve().parent.parent
-SCREENSHOT_DIR = Path.home() / ".claude/outputs/images"
+SCREENSHOT_DIR = _SNS_ROOT / "outputs/images"
 AUTOMATION_PROFILES_DIR = _SNS_ROOT / "chrome-profiles"
 INSTA_IMAGE_SCRIPT = Path.home() / ".claude/scripts/insta_image.py"
 SKILLS_DIR = _SNS_ROOT / "skills"
@@ -660,7 +660,7 @@ def main():
         print(f"🤖 生成キャプション:\n{caption}\n")
 
         today = _date.today().isoformat()
-        out_dir = Path.home() / ".claude/outputs/videos" / today
+        out_dir = _SNS_ROOT / "outputs/videos" / today
         out_dir.mkdir(parents=True, exist_ok=True)
         existing = list(out_dir.glob("*.mp4"))
         video_path = out_dir / f"{len(existing)+1:03d}_reel.mp4"

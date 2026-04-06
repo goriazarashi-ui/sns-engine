@@ -4,7 +4,8 @@
 
 SNS="$(cd "$(dirname "$0")/.." && pwd)"
 FLUX_PYTHON="$SNS/flux-env/bin/python3"
-LOG="$HOME/.claude/outputs/launchagent_grow_assets.log"
+LOG="$SNS/outputs/launchagent_grow_assets.log"
+mkdir -p "$SNS/outputs"
 
 # アクティブクライアントを読み込む
 if [ -z "$SNS_CLIENT" ] && [ -f "$SNS/current_client" ]; then

@@ -19,7 +19,8 @@ SCRIPTS_DIR = Path(__file__).parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 from client_manager import get_client_dir
 
-CACHE_DIR = Path.home() / ".claude/outputs"
+_SNS_ROOT = Path(__file__).resolve().parent.parent
+CACHE_DIR = _SNS_ROOT / "outputs"
 CLAUDE_BIN = Path.home() / ".local/bin/claude"
 
 # カテゴリごとのフォールバックプロンプト（キャッシュがない日用）

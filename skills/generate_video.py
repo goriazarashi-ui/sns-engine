@@ -21,8 +21,9 @@ SCRIPTS_DIR = Path(__file__).parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 from client_manager import get_client_dir
 
+_SNS_ROOT = Path(__file__).resolve().parent.parent
 GENERATE_VIDEO_SCRIPT = Path.home() / ".claude/scripts/generate_video.py"
-VIDEO_OUT_DIR = Path.home() / ".claude/outputs/videos"
+VIDEO_OUT_DIR = _SNS_ROOT / "outputs/videos"
 
 
 def load_config(client_name: str) -> dict:

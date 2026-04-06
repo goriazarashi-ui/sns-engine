@@ -21,7 +21,8 @@ try:
 except ImportError:
     pass
 
-LOG_DIR = Path.home() / ".claude/outputs"
+_SNS_ROOT = Path(__file__).resolve().parent.parent
+LOG_DIR = _SNS_ROOT / "outputs"
 GIST_ID_FILE = LOG_DIR / "gist_id.txt"
 
 

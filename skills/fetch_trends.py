@@ -23,7 +23,8 @@ except ImportError:
     print("ERROR: pip3 install feedparser requests --break-system-packages")
     sys.exit(1)
 
-CACHE_PATH = Path.home() / ".claude/outputs/trends_cache.json"
+_SNS_ROOT = Path(__file__).resolve().parent.parent
+CACHE_PATH = _SNS_ROOT / "outputs/trends_cache.json"
 CLAUDE_BIN = Path.home() / ".local/bin/claude"
 
 # 対象RSSフィード

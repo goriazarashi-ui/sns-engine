@@ -21,10 +21,11 @@ SCRIPTS_DIR = Path(__file__).parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 from client_manager import get_client_dir
 
+_SNS_ROOT = Path(__file__).resolve().parent.parent
 INSTA_IMAGE_SCRIPT = Path.home() / ".claude/scripts/insta_image.py"
-IMAGE_OUT_DIR = Path.home() / ".claude/outputs/images"
-CACHE_DIR = Path.home() / ".claude/outputs"
-TRENDS_CACHE = Path.home() / ".claude/outputs/trends_cache.json"
+IMAGE_OUT_DIR = _SNS_ROOT / "outputs/images"
+CACHE_DIR = _SNS_ROOT / "outputs"
+TRENDS_CACHE = _SNS_ROOT / "outputs/trends_cache.json"
 
 
 def load_trends() -> dict:

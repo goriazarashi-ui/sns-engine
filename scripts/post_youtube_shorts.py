@@ -34,8 +34,8 @@ except ImportError:
     sys.exit(1)
 
 _SNS_ROOT = Path(__file__).resolve().parent.parent
-SCREENSHOT_DIR = Path.home() / ".claude/outputs/images"
-VIDEO_DIR = Path.home() / ".claude/outputs/videos"
+SCREENSHOT_DIR = _SNS_ROOT / "outputs/images"
+VIDEO_DIR = _SNS_ROOT / "outputs/videos"
 AUTOMATION_PROFILES_DIR = _SNS_ROOT / "chrome-profiles"
 GENERATE_VIDEO_SCRIPT = Path.home() / ".claude/scripts/generate_video.py"
 SKILLS_DIR = _SNS_ROOT / "skills"

@@ -15,7 +15,8 @@ from datetime import datetime
 from pathlib import Path
 
 
-LOG_DIR = Path.home() / ".claude/outputs"
+_SNS_ROOT = Path(__file__).resolve().parent.parent
+LOG_DIR = _SNS_ROOT / "outputs"
 
 
 def log(msg: str):

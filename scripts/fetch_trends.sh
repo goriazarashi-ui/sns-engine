@@ -2,9 +2,10 @@
 # トレンド取得スクリプト（LaunchAgent用）
 # 毎晩1:00に実行される
 
-PYTHON=/opt/homebrew/bin/python3
 SNS="$(cd "$(dirname "$0")/.." && pwd)"
-LOG="$HOME/.claude/outputs/launchagent_fetch_trends.log"
+PYTHON="$(command -v python3)"
+LOG="$SNS/outputs/launchagent_fetch_trends.log"
+mkdir -p "$SNS/outputs"
 
 exec >> "$LOG" 2>&1
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] === トレンド取得開始 ==="
