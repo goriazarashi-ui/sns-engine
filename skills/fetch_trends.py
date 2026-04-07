@@ -25,7 +25,8 @@ except ImportError:
 
 _SNS_ROOT = Path(__file__).resolve().parent.parent
 CACHE_PATH = _SNS_ROOT / "outputs/trends_cache.json"
-CLAUDE_BIN = Path.home() / ".local/bin/claude"
+import shutil as _shutil
+CLAUDE_BIN = _shutil.which("claude") or str(Path.home() / ".local/bin/claude")
 
 # 対象RSSフィード
 RSS_FEEDS = {
@@ -120,7 +121,7 @@ def extract_keywords(articles_by_genre: dict, verbose: bool) -> dict:
         print("🤖 Claude がキーワード抽出中...", file=sys.stderr)
 
     result = subprocess.run(
-        [str(CLAUDE_BIN), "-p", prompt],
+        [CLAUDE_BIN, "-p", prompt],
         capture_output=True, text=True, timeout=120,
     )
 

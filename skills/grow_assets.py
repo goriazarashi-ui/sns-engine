@@ -21,7 +21,8 @@ from client_manager import get_client_dir
 
 _SNS_ROOT = Path(__file__).resolve().parent.parent
 CACHE_DIR = _SNS_ROOT / "outputs"
-CLAUDE_BIN = Path.home() / ".local/bin/claude"
+import shutil as _shutil
+CLAUDE_BIN = _shutil.which("claude") or str(Path.home() / ".local/bin/claude")
 
 # カテゴリごとのフォールバックプロンプト（キャッシュがない日用）
 FALLBACK_PROMPTS = {
@@ -35,7 +36,7 @@ FALLBACK_PROMPTS = {
 NEGATIVE_PROMPT = "person, people, human, face, body, hand, finger, portrait, selfie, ugly, blurry, low quality"
 
 
-def load_recent_cache(client_name: str) -> dict | None:
+def load_recent_cache(client_name: str):
     """昨日または今日のキャッシュを読む（夕→朝の順で優先）"""
     today = date.today().isoformat()
     yesterday = (date.today() - timedelta(days=1)).isoformat()
@@ -67,7 +68,7 @@ def build_image_prompt(image_text: str, activity: str) -> str:
 プロンプトのみ出力してください。説明不要。"""
 
     result = subprocess.run(
-        [str(CLAUDE_BIN), "-p", prompt],
+        [CLAUDE_BIN, "-p", prompt],
         capture_output=True, text=True, timeout=30,
     )
     if result.returncode != 0 or not result.stdout.strip():

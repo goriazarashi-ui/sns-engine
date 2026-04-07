@@ -76,8 +76,11 @@ def build_prompt(profile: dict, sns: str, include_image_text: bool = False) -> s
 
 
 def call_claude(prompt: str) -> str:
+    import shutil
+    from pathlib import Path
+    claude_bin = shutil.which("claude") or str(Path.home() / ".local/bin/claude")
     result = subprocess.run(
-        ["/Users/imamuramaki/.local/bin/claude", "-p", prompt],
+        [claude_bin, "-p", prompt],
         capture_output=True,
         text=True,
         timeout=60,

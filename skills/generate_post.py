@@ -88,8 +88,10 @@ def build_video_prompt(profile: dict, sns: str) -> tuple[str, str]:
 
 
 def call_claude(prompt: str) -> str:
+    import shutil
+    claude_bin = shutil.which("claude") or str(Path.home() / ".local/bin/claude")
     result = subprocess.run(
-        ["/Users/imamuramaki/.local/bin/claude", "-p", prompt],
+        [claude_bin, "-p", prompt],
         capture_output=True, text=True, timeout=60,
     )
     if result.returncode != 0:

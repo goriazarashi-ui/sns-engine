@@ -60,7 +60,7 @@ def search_archive(query: str) -> list:
         return []
 
 
-def get_mp3_url(identifier: str) -> tuple | None:
+def get_mp3_url(identifier: str):
     """アイテムから適切なMP3を選ぶ（5KB〜50MB）"""
     url = f"https://archive.org/metadata/{identifier}"
     try:

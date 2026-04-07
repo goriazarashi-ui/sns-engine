@@ -85,7 +85,7 @@ def load_templates(client_name: str, sns: str) -> list[str]:
     return templates
 
 
-def get_next_template(client_name: str, sns: str) -> str | None:
+def get_next_template(client_name: str, sns: str):
     """テンプレートを順番に返す（ローテーション）"""
     templates = load_templates(client_name, sns)
     if not templates:

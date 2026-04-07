@@ -127,8 +127,10 @@ def build_prompt(profile: dict, activity: dict) -> str:
 
 
 def call_claude(prompt: str) -> str:
+    import shutil
+    claude_bin = shutil.which("claude") or str(Path.home() / ".local/bin/claude")
     result = subprocess.run(
-        ["/Users/imamuramaki/.local/bin/claude", "-p", prompt],
+        [claude_bin, "-p", prompt],
         capture_output=True, text=True, timeout=60,
     )
     if result.returncode != 0:
@@ -154,7 +156,7 @@ def parse_output(raw: str) -> dict:
     }
 
 
-def get_random_asset_image(client_name: str, activity: str) -> str | None:
+def get_random_asset_image(client_name: str, activity: str):
     """activityに対応するアセット画像をランダムに返す"""
     config = load_sns_config(client_name)
     client_dir = get_client_dir(client_name)
@@ -246,7 +248,7 @@ def generate(client_name: str) -> dict:
     return result
 
 
-def load_cache(client_name: str, slot: str = None) -> dict | None:
+def load_cache(client_name: str, slot: str = None):
     if slot is None:
         slot = get_slot()
     cp = cache_path(client_name, slot)
