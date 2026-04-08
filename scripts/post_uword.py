@@ -199,40 +199,39 @@ def post_to_uword(client_name: str, title: str, body: str, category: str = DEFAU
                 raise Exception("本文入力欄が見つかりませんでした")
             print("  → 本文入力 OK")
 
-            # カテゴリー選択
-            category_selectors = [
-                'select[name="category"]',
-                'select[name*="category" i]',
-                'select[id*="category" i]',
-                'select',
-            ]
-            if not _try_select(page, category_selectors, category):
-                print(f"  ⚠️  カテゴリー選択失敗（デフォルトのまま投稿継続）")
-            else:
+            # カテゴリー選択（U-Wordはボタン式）
+            try:
+                page.get_by_text(category, exact=True).first.click()
                 print(f"  → カテゴリー: {category}")
+            except Exception:
+                print(f"  ⚠️  カテゴリー「{category}」が見つかりません（デフォルトで継続）")
 
             time.sleep(1)
             _save_screenshot(page, f"{client_name}_before_submit")
 
-            # 投稿ボタン
-            submit_selectors = [
-                'button[type="submit"]',
-                'input[type="submit"]',
-                'button:has-text("投稿")',
-                'button:has-text("送信")',
-                'button:has-text("登録")',
-                'a:has-text("投稿する")',
-            ]
+            # 投稿ボタン（U-Wordは「投稿」テキスト要素・「下書き」ではない方を選ぶ）
             submitted = False
-            for sel in submit_selectors:
-                try:
-                    btn = page.locator(sel).first
-                    if btn.count() > 0 and btn.is_visible(timeout=1000):
-                        btn.click()
-                        submitted = True
-                        break
-                except Exception:
-                    continue
+            try:
+                # get_by_text で「投稿」を完全一致で取得（下書きを除外）
+                post_btn = page.get_by_text("投稿", exact=True).last
+                post_btn.wait_for(timeout=5000)
+                post_btn.click()
+                submitted = True
+            except Exception:
+                # フォールバック: button要素として
+                for sel in [
+                    'button:has-text("投稿"):not(:has-text("下書き"))',
+                    'button[type="submit"]',
+                    'input[type="submit"]',
+                ]:
+                    try:
+                        btn = page.locator(sel).first
+                        if btn.count() > 0 and btn.is_visible(timeout=1000):
+                            btn.click()
+                            submitted = True
+                            break
+                    except Exception:
+                        continue
 
             if not submitted:
                 _save_screenshot(page, f"{client_name}_submit_failed")
