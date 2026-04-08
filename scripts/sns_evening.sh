@@ -72,4 +72,9 @@ $NOTIFY "Instagram Reel" $RETRY_CMD $PYTHON "$SNS/scripts/post_instagram.py" --c
 $REPORT_CMD >> "$LOG/cron_report.log" 2>&1
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Instagram Reel 完了"
 
+# 9. U-Word
+$NOTIFY "U-Word" $RETRY_CMD $PYTHON "$SNS/scripts/post_uword.py" --client $SNS_CLIENT --generate >> "$LOG/cron_uword.log" 2>&1
+$REPORT_CMD >> "$LOG/cron_report.log" 2>&1
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] U-Word 完了"
+
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] === 夜の投稿すべて完了 ==="

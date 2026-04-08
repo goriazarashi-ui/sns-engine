@@ -282,6 +282,35 @@ def _save_screenshot(page, label: str = "error"):
         pass
 
 
+def _load_from_cache(client_name: str):
+    """デイリーキャッシュから (title, body) を生成して返す"""
+    import json as _json
+    from datetime import datetime
+    cache_dir = _SNS_ROOT / "outputs"
+    # 朝/夕で適切なキャッシュを選ぶ
+    hour = datetime.now().hour
+    slot = "morning" if hour < 14 else "evening"
+    cache_path = cache_dir / f"daily_cache_{client_name}_{slot}.json"
+    if not cache_path.exists():
+        # フォールバック: もう片方を試す
+        slot = "evening" if slot == "morning" else "morning"
+        cache_path = cache_dir / f"daily_cache_{client_name}_{slot}.json"
+    if not cache_path.exists():
+        return None, None
+    with open(cache_path, encoding="utf-8") as f:
+        data = _json.load(f)
+    body = data.get("facebook_text") or data.get("instagram_caption") or data.get("x_text", "")
+    if not body:
+        return None, None
+    # タイトルは本文の最初の1行（句点まで）
+    first_line = body.split("\n")[0].split("。")[0]
+    if not first_line:
+        first_line = body[:TITLE_MAX]
+    title = first_line[:TITLE_MAX]
+    body = body[:BODY_MAX]
+    return title, body
+
+
 def main():
     parser = argparse.ArgumentParser(description="U-Wordへの自動投稿")
     parser.add_argument("--client", required=True, help="クライアント名（例: 天弥堂）")
@@ -289,20 +318,30 @@ def main():
     parser.add_argument("--title", help=f"投稿タイトル（{TITLE_MAX}文字以内）")
     parser.add_argument("--body", help=f"投稿本文（{BODY_MAX}文字以内）")
     parser.add_argument("--category", default=DEFAULT_CATEGORY, help=f"カテゴリー（デフォルト: {DEFAULT_CATEGORY}）")
+    parser.add_argument("--generate", action="store_true", help="デイリーキャッシュから自動生成")
     args = parser.parse_args()
 
     if args.setup:
         setup_profile(args.client)
         return
 
-    if not args.title or not args.body:
-        print("ERROR: --title と --body の両方を指定してください")
-        sys.exit(1)
+    if args.generate:
+        title, body = _load_from_cache(args.client)
+        if not title or not body:
+            print("ERROR: デイリーキャッシュが見つかりません。先に generate_daily.py を実行してください")
+            sys.exit(1)
+        print(f"🤖 生成タイトル: {title}")
+        print(f"🤖 生成本文: {body[:80]}...")
+    else:
+        if not args.title or not args.body:
+            print("ERROR: --title と --body の両方、もしくは --generate を指定してください")
+            sys.exit(1)
+        title, body = args.title, args.body
 
     post_to_uword(
         client_name=args.client,
-        title=args.title,
-        body=args.body,
+        title=title,
+        body=body,
         category=args.category,
     )
 
