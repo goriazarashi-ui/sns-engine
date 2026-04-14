@@ -612,6 +612,260 @@ def post_to_instagram(client_name: str, image_path: Path, caption: str):
             context.close()
 
 
+def post_carousel_to_instagram(client_name: str, image_dir: Path, caption: str):
+    """カルーセル（複数画像）をInstagramに投稿する"""
+    profile_dir = automation_profile(client_name)
+    if not profile_dir.exists():
+        print(f"❌ 専用プロファイルが未作成です。先に以下を実行してください:")
+        print(f"   python3 post_instagram.py --client {client_name} --setup")
+        sys.exit(1)
+
+    # 画像ファイルを収集（slide_01, slide_02...の順）
+    image_files = sorted(image_dir.glob("slide_*.png"))
+    if not image_files:
+        print(f"❌ {image_dir} にスライド画像が見つかりません")
+        sys.exit(1)
+    print(f"📸 カルーセル: {len(image_files)}枚の画像")
+
+    remove_singleton_lock(profile_dir)
+    print("🌐 Chromeを起動中（専用プロファイル）...")
+
+    with sync_playwright() as p:
+        context = p.chromium.launch_persistent_context(
+            user_data_dir=str(profile_dir),
+            channel="chrome",
+            headless=False,
+            viewport={"width": 1280, "height": 800},
+            args=["--disable-blink-features=AutomationControlled"],
+            ignore_default_args=["--enable-automation", "--no-sandbox"],
+        )
+        page = context.new_page()
+
+        try:
+            page.goto("https://www.instagram.com/", wait_until="domcontentloaded", timeout=60000)
+            time.sleep(3)
+
+            # ログイン確認
+            if "login" in page.url or "accounts" in page.url:
+                print("❌ ログインしていません。先に --setup を実行してください。")
+                context.close()
+                sys.exit(1)
+
+            print("✅ ログイン確認OK")
+            print("📝 カルーセル投稿フロー開始...")
+
+            # 「作成」ボタンをクリック
+            print("  → 作成ボタンを探しています...")
+            create_clicked = False
+            create_selectors = [
+                '[aria-label="新しい投稿"]',
+                '[aria-label="新しい投稿を作成"]',
+                '[aria-label="新規投稿"]',
+                '[aria-label="投稿を作成"]',
+                '[aria-label="Create"]',
+                '[aria-label="New post"]',
+                '[aria-label="作成"]',
+                'a[href="/create/style/"]',
+                'svg[aria-label="新しい投稿"]',
+                'svg[aria-label="新しい投稿を作成"]',
+                'svg[aria-label="新規投稿"]',
+            ]
+            for selector in create_selectors:
+                try:
+                    btn = page.locator(selector).first
+                    if btn.is_visible(timeout=3000):
+                        btn.click()
+                        create_clicked = True
+                        print(f"  → 作成ボタンクリック: {selector}")
+                        break
+                except Exception:
+                    continue
+
+            if not create_clicked:
+                for text in ["作成", "Create", "新規投稿"]:
+                    try:
+                        btn = page.get_by_text(text, exact=True).first
+                        if btn.is_visible(timeout=2000):
+                            btn.click()
+                            create_clicked = True
+                            print(f"  → テキストで作成ボタンクリック: {text}")
+                            break
+                    except Exception:
+                        continue
+
+            if not create_clicked:
+                _save_screenshot(page, f"{client_name}_carousel_create_btn")
+                raise Exception("作成ボタンが見つかりません")
+
+            time.sleep(2)
+
+            # サブメニューの「投稿」をクリック
+            for text in ["投稿", "Post"]:
+                try:
+                    btn = page.get_by_text(text, exact=True).first
+                    if btn.is_visible(timeout=3000):
+                        btn.click()
+                        print(f"  → 「{text}」クリック")
+                        break
+                except Exception:
+                    continue
+
+            time.sleep(2)
+
+            # ファイル選択（複数画像を一度に選択）
+            print(f"🖼️  {len(image_files)}枚の画像をアップロード中...")
+            with page.expect_file_chooser(timeout=15000) as fc_info:
+                for selector in [
+                    'button:has-text("コンピューターから選択")',
+                    'button:has-text("Select from computer")',
+                    'button:has-text("パソコンから選択")',
+                    'input[type="file"]',
+                ]:
+                    try:
+                        el = page.locator(selector).first
+                        if el.is_visible(timeout=3000):
+                            el.click()
+                            print(f"  → ファイル選択ボタンクリック: {selector}")
+                            break
+                    except Exception:
+                        continue
+            file_chooser = fc_info.value
+            # 複数画像を同時選択
+            file_chooser.set_files([str(f) for f in image_files])
+            print(f"  → {len(image_files)}枚を選択完了")
+            time.sleep(4)
+
+            # 「次へ」を2回クリック（切り抜き → フィルター）
+            for step_name in ["切り抜き", "フィルター"]:
+                clicked = False
+                for selector in [
+                    '[role="button"]:has-text("次へ")',
+                    '[role="button"]:has-text("Next")',
+                    'button:has-text("次へ")',
+                    'button:has-text("Next")',
+                    '[aria-label="次へ"]',
+                ]:
+                    try:
+                        btn = page.locator(selector).last
+                        btn.wait_for(state="visible", timeout=10000)
+                        time.sleep(0.5)
+                        btn.evaluate("el => el.click()")
+                        print(f"  → {step_name}をスキップ ({selector})")
+                        time.sleep(3)
+                        clicked = True
+                        break
+                    except Exception:
+                        continue
+                if not clicked:
+                    print(f"  ⚠️ {step_name}の「次へ」が見つかりません（スキップして続行）")
+
+            # キャプション入力
+            print("📝 キャプション入力中...")
+            for selector in [
+                '[aria-label="キャプションを書く..."]',
+                '[aria-label="Write a caption..."]',
+                'div[contenteditable="true"]',
+                'textarea[aria-label*="caption"]',
+            ]:
+                try:
+                    cap_field = page.locator(selector).first
+                    if cap_field.is_visible(timeout=5000):
+                        cap_field.click()
+                        time.sleep(0.5)
+                        cap_field.type(caption, delay=20)
+                        time.sleep(1)
+                        page.keyboard.press("Tab")
+                        time.sleep(1)
+                        break
+                except Exception:
+                    continue
+
+            # 「破棄」ダイアログが出ていたらキャンセル
+            try:
+                cancel_btn = page.get_by_text("キャンセル", exact=True).first
+                if cancel_btn.is_visible(timeout=2000):
+                    cancel_btn.click()
+                    print("  → 破棄ダイアログをキャンセル")
+                    time.sleep(1)
+            except Exception:
+                pass
+
+            # 「シェア」ボタンをクリック
+            print("🚀 シェア中...")
+            share_clicked = False
+            for selector in [
+                'div[role="dialog"] [role="button"]:has-text("シェア"):not(:has-text("シェア先"))',
+                '[role="button"]:has-text("シェア")',
+                '[role="button"]:has-text("Share")',
+                'button:has-text("シェア")',
+                'button:has-text("Share")',
+                '[aria-label="シェア"]',
+            ]:
+                try:
+                    btns = page.locator(selector)
+                    share_btn = btns.first
+                    share_btn.wait_for(state="visible", timeout=10000)
+                    share_btn.evaluate("el => el.click()")
+                    share_clicked = True
+                    print(f"  → シェアボタンクリック ({selector})")
+                    break
+                except Exception:
+                    continue
+
+            if not share_clicked:
+                _save_screenshot(page, f"{client_name}_carousel_share_btn")
+                raise Exception("シェアボタンが見つかりません")
+
+            # 投稿完了を確認
+            posted = False
+            for success_selector in [
+                'text="投稿がシェアされました"',
+                'text="Your post has been shared"',
+                'text="投稿しました"',
+                'text="シェアされました"',
+            ]:
+                try:
+                    page.locator(success_selector).first.wait_for(timeout=30000)
+                    posted = True
+                    break
+                except Exception:
+                    continue
+
+            if not posted:
+                try:
+                    page.locator('[aria-label="新しい投稿を作成"], [aria-label="新しい投稿"]').first.wait_for(
+                        state="visible", timeout=15000
+                    )
+                    posted = True
+                except Exception:
+                    pass
+
+            if not posted:
+                _save_screenshot(page, f"{client_name}_carousel_after_share")
+                print("⚠️ 投稿完了ダイアログ未確認（投稿された可能性あり）")
+            else:
+                print("✅ 投稿確認OK")
+
+            print(f"✅ カルーセル投稿完了！（{len(image_files)}枚）")
+            time.sleep(2)
+
+        except PlaywrightTimeout as e:
+            print(f"❌ タイムアウト: {e}")
+            _save_screenshot(page, client_name)
+            raise
+        except Exception as e:
+            print(f"❌ エラー: {e}")
+            _save_screenshot(page, client_name)
+            raise
+        finally:
+            try:
+                page.close()
+            except Exception:
+                pass
+            time.sleep(1)
+            context.close()
+
+
 def _save_screenshot(page, label: str = "error"):
     try:
         today = date.today().isoformat()
@@ -632,6 +886,8 @@ def main():
     parser.add_argument("--generate", action="store_true", help="Claude CLIでキャプション・画像テキストを自動生成")
     parser.add_argument("--image", help="投稿する画像パス（省略時は自動生成）")
     parser.add_argument("--caption", help="キャプション")
+    parser.add_argument("--carousel", help="カルーセル投稿（スライド画像のディレクトリパス）")
+    parser.add_argument("--carousel-caption", help="カルーセル投稿のキャプション（省略時はディレクトリ内のcaption.txtを使用）")
     parser.add_argument("--reel", action="store_true", help="リールに動画を投稿")
     parser.add_argument("--reel-generate", action="store_true", help="動画を自動生成してリール投稿")
     parser.add_argument("--video", help="投稿する動画パス（--reel と併用）")
@@ -639,6 +895,22 @@ def main():
 
     if args.setup:
         setup_profile(args.client)
+        return
+
+    # カルーセル投稿モード
+    if args.carousel:
+        carousel_dir = Path(args.carousel)
+        if not carousel_dir.exists():
+            print(f"❌ ディレクトリが見つかりません: {args.carousel}")
+            sys.exit(1)
+        # キャプション取得
+        carousel_caption = args.carousel_caption or ""
+        if not carousel_caption:
+            caption_file = carousel_dir / "caption.txt"
+            if caption_file.exists():
+                carousel_caption = caption_file.read_text().strip()
+                print(f"📋 caption.txt からキャプション読み込み")
+        post_carousel_to_instagram(client_name=args.client, image_dir=carousel_dir, caption=carousel_caption)
         return
 
     # リール生成＆投稿モード

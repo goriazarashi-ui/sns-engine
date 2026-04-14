@@ -18,3 +18,9 @@ __pycache__/
 # ログ・出力
 outputs/
 *.log
+
+# カルーセル生成結果（再生成可能）
+scripts/carousel/output/
+
+# HuggingFaceモデルキャッシュ（setup.sh初回で自動DL）
+.cache/

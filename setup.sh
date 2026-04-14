@@ -170,6 +170,31 @@ else
 fi
 
 # ────────────────────────────────────────
+# 3c. SDXL Turbo 事前ダウンロード（カルーセル用、約5GB）
+# ────────────────────────────────────────
+info "SDXL Turbo モデルを確認中..."
+SDXL_CACHE="$HOME_DIR/.cache/huggingface/hub/models--stabilityai--sdxl-turbo"
+if [ ! -d "$SDXL_CACHE" ]; then
+    echo ""
+    read -p "  SDXL Turbo（約5GB）を事前DLしますか？（初回カルーセル生成時にDLされるので、スキップも可） [y/N]: " DL_SDXL
+    if [[ "$DL_SDXL" =~ ^[Yy]$ ]]; then
+        info "SDXL Turbo をダウンロード中（数分かかります）..."
+        "$FLUX_ENV/bin/python3" -c "
+from diffusers import AutoPipelineForText2Image
+import torch
+print('モデルDL中...')
+AutoPipelineForText2Image.from_pretrained('stabilityai/sdxl-turbo', torch_dtype=torch.float16, variant='fp16')
+print('DL完了')
+"
+        ok "SDXL Turbo DL完了"
+    else
+        ok "SDXL Turbo DLはスキップ（初回カルーセル生成時に自動DL）"
+    fi
+else
+    ok "SDXL Turbo インストール済み"
+fi
+
+# ────────────────────────────────────────
 # 4. Claude Code CLI
 # ────────────────────────────────────────
 info "Claude Code CLI を確認中..."
@@ -402,6 +427,10 @@ echo "  python3 $SNS_DIR/scripts/post_threads.py --client \"$CLIENT\" --setup"
 echo "  python3 $SNS_DIR/scripts/post_instagram.py --client \"$CLIENT\" --setup"
 echo "  python3 $SNS_DIR/scripts/post_tiktok.py --client \"$CLIENT\" --setup"
 echo "  python3 $SNS_DIR/scripts/post_youtube_shorts.py --client \"$CLIENT\" --setup"
+echo ""
+echo "--- カルーセル機能（Instagram複数画像投稿）---"
+echo "  $FLUX_ENV/bin/python3 $SNS_DIR/scripts/carousel/generate_carousel.py --id <ID>"
+echo "  python3 $SNS_DIR/scripts/post_instagram.py --client \"$CLIENT\" --carousel $SNS_DIR/scripts/carousel/output/carousel_<ID>"
 echo ""
 echo "======================================"
 echo " セットアップ完了！"
